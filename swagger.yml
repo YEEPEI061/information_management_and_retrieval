@@ -1,0 +1,241 @@
+openapi: 3.0.0
+info:
+  title: "Trail Microservice API"
+  description: "API for managing trails, waypoints, tags, and trail photos"
+  version: "1.2.0"
+
+servers:
+  - url: "/api"
+
+components:
+  schemas:
+    Waypoint:
+      type: object
+      properties:
+        waypoint_name:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        sequence_no:
+          type: integer
+
+    TrailTag:
+      type: object
+      properties:
+        trail_tag_name:
+          type: string
+
+    Photo:
+      type: object
+      properties:
+        photo_url:
+          type: string
+        caption:
+          type: string
+
+    TrailCreate:
+      type: object
+      required:
+        - trail_name
+        - created_by
+      properties:
+        trail_name:
+          type: string
+        description:
+          type: string
+        length:
+          type: number
+        elevation_gain:
+          type: number
+        estimated_time:
+          type: number
+        route_type_name:
+          type: string
+        difficulty_name:
+          type: string
+        location_name:
+          type: string
+        created_by:
+          type: string
+        waypoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/Waypoint"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrailTag"
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Photo"
+      example:
+        created_by: "Ada Lovelace"
+        description: "A scenic forest trail"
+        difficulty_name: "Easy (choose one of: Easy, Moderate, Hard)"
+        elevation_gain: 120
+        estimated_time: 1.5
+        length: 5.2
+        location_name: "Forest Park"
+        photos:
+          - caption: "Beautiful forest view"
+            photo_url: "https://example.com/forest_view.jpg"
+        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
+        tags:
+          - trail_tag_name: "Forest"
+          - trail_tag_name: "Scenic"
+        trail_name: "Forest Adventure"
+        waypoints:
+          - description: "Trail start point"
+            latitude: 3.1408
+            longitude: 101.6869
+            sequence_no: 1
+            waypoint_name: "Start"
+          - description: "Nice viewpoint"
+            latitude: 3.1410
+            longitude: 101.6871
+            sequence_no: 2
+            waypoint_name: "Scenic View"
+
+    TrailUpdate:
+      type: object
+      properties:
+        trail_name:
+          type: string
+        description:
+          type: string
+        length:
+          type: number
+        elevation_gain:
+          type: number
+        estimated_time:
+          type: number
+
+        # Name-based updates
+        route_type_name:
+          type: string
+        difficulty_name:
+          type: string
+        location_name:
+          type: string
+
+        updated_by:
+          type: string
+
+        waypoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/Waypoint"
+
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrailTag"
+
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Photo"
+
+      example:
+        trail_name: "Forest Adventure Updated"
+        description: "An updated scenic forest trail"
+        length: 5.5
+        elevation_gain: 130
+        estimated_time: 1.6
+        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
+        difficulty_name: "Moderate (choose one of: Easy, Moderate, Hard)"
+        location_name: "Forest Park"
+        updated_by: "Ada Lovelace"
+        waypoints:
+          - waypoint_name: "Start"
+            description: "Trail start point"
+            latitude: 3.1408
+            longitude: 101.6869
+            sequence_no: 1
+          - waypoint_name: "Scenic View"
+            description: "Nice viewpoint"
+            latitude: 3.1410
+            longitude: 101.6871
+            sequence_no: 2
+        tags:
+          - trail_tag_name: "Forest"
+          - trail_tag_name: "Scenic"
+        photos:
+          - photo_url: "https://example.com/forest_view_updated.jpg"
+            caption: "Updated forest view"
+
+  parameters:
+    trail_id:
+      name: trail_id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+paths:
+  /trails:
+    get:
+      operationId: "trails.read_all"
+      tags: ["Trails"]
+      summary: "Get all trails"
+      responses:
+        "200":
+          description: "List of all trails"
+
+    post:
+      operationId: "trails.create"
+      tags: ["Trails"]
+      summary: "Create a new trail with waypoints, tags, and photos"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              x-body-name: "trail_data"
+              $ref: "#/components/schemas/TrailCreate"
+      responses:
+        "201":
+          description: "Trail created"
+
+  /trails/{trail_id}:
+    get:
+      operationId: "trails.read_one"
+      tags: ["Trails"]
+      summary: "Get a trail by ID"
+      parameters:
+        - $ref: "#/components/parameters/trail_id"
+      responses:
+        "200":
+          description: "Trail data"
+
+    put:
+      operationId: "trails.update"
+      tags: ["Trails"]
+      summary: "Update a trail (fields, waypoints, tags, photos)"
+      parameters:
+        - $ref: "#/components/parameters/trail_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              x-body-name: "trail_data"
+              $ref: "#/components/schemas/TrailUpdate"
+      responses:
+        "200":
+          description: "Trail updated"
+
+    delete:
+      operationId: "trails.delete"
+      tags: ["Trails"]
+      summary: "Delete a trail"
+      parameters:
+        - $ref: "#/components/parameters/trail_id"
+      responses:
+        "200":
+          description: "Trail deleted"

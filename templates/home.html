@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Trail Microservice</title>
+    <script>
+      async function loginUser(event) {
+        event.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const response = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!response.ok) {
+            alert("Login failed! Check your email and password.");
+            return;
+          }
+
+          const data = await response.json();
+          console.log("API response:", data);
+
+          if (
+            Array.isArray(data) &&
+            data[0] === "Verified" &&
+            data[1] === "True"
+          ) {
+            localStorage.setItem("user", JSON.stringify({ email }));
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById(
+              "userInfo"
+            ).innerText = `Logged in as: ${email}`;
+          } else {
+            alert("Login failed! Invalid credentials.");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error logging in");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Trail Microservice</h1>
+
+    <!-- Login Form -->
+    <div id="loginForm">
+      <h2>Login</h2>
+      <form onsubmit="loginUser(event)">
+        <label>Email: <input type="email" id="email" required /></label
+        ><br /><br />
+        <label>Password: <input type="password" id="password" required /></label
+        ><br /><br />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <div id="userInfo"></div>
+
+    <h2>Trails Overview</h2>
+
+    {% for trail in trails %}
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px">
+      <h3>{{ trail.trail_name }}</h3>
+      <p><strong>Description:</strong> {{ trail.description }}</p>
+      <p><strong>Length:</strong> {{ trail.length }} km</p>
+      <p><strong>Elevation Gain:</strong> {{ trail.elevation_gain }} m</p>
+      <p><strong>Estimated Time:</strong> {{ trail.estimated_time }} hrs</p>
+      <p><strong>Route Type:</strong> {{ trail.route_type.route_type_name }}</p>
+      <p><strong>Difficulty:</strong> {{ trail.difficulty.difficulty_name }}</p>
+      <p><strong>Location:</strong> {{ trail.location.location_name }}</p>
+      <p>
+        <strong>Tags:</strong> {% for tag in trail.tags %} {{ tag.trail_tag_name
+        }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </p>
+
+      <h4>Waypoints:</h4>
+      <ul>
+        {% for wp in trail.waypoints %}
+        <li>
+          {{ wp.sequence_no }} - {{ wp.waypoint_name }} (Lat: {{ wp.latitude }},
+          Lon: {{ wp.longitude }})
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </body>
+</html>
