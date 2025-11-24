@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: "Trail Microservice API"
-  description: "API for managing trails, waypoints, tags, and trail photos"
+  description: "API for managing trails, waypoints, tags, trail photos, and activities"
   version: "1.2.0"
 
 servers:
@@ -9,6 +9,7 @@ servers:
 
 components:
   schemas:
+    # ---------- TRAILS ----------
     Waypoint:
       type: object
       properties:
@@ -76,7 +77,7 @@ components:
       example:
         created_by: "Ada Lovelace"
         description: "A scenic forest trail"
-        difficulty_name: "Easy (choose one of: Easy, Moderate, Hard)"
+        difficulty_name: "Easy"
         elevation_gain: 120
         estimated_time: 1.5
         length: 5.2
@@ -84,7 +85,7 @@ components:
         photos:
           - caption: "Beautiful forest view"
             photo_url: "https://example.com/forest_view.jpg"
-        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
+        route_type_name: "Loop"
         tags:
           - trail_tag_name: "Forest"
           - trail_tag_name: "Scenic"
@@ -114,60 +115,126 @@ components:
           type: number
         estimated_time:
           type: number
-
-        # Name-based updates
         route_type_name:
           type: string
         difficulty_name:
           type: string
         location_name:
           type: string
-
         updated_by:
           type: string
-
         waypoints:
           type: array
           items:
             $ref: "#/components/schemas/Waypoint"
-
         tags:
           type: array
           items:
             $ref: "#/components/schemas/TrailTag"
-
         photos:
           type: array
           items:
             $ref: "#/components/schemas/Photo"
 
-      example:
-        trail_name: "Forest Adventure Updated"
-        description: "An updated scenic forest trail"
-        length: 5.5
-        elevation_gain: 130
-        estimated_time: 1.6
-        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
-        difficulty_name: "Moderate (choose one of: Easy, Moderate, Hard)"
-        location_name: "Forest Park"
-        updated_by: "Ada Lovelace"
-        waypoints:
-          - waypoint_name: "Start"
-            description: "Trail start point"
-            latitude: 3.1408
-            longitude: 101.6869
-            sequence_no: 1
-          - waypoint_name: "Scenic View"
-            description: "Nice viewpoint"
-            latitude: 3.1410
-            longitude: 101.6871
-            sequence_no: 2
-        tags:
-          - trail_tag_name: "Forest"
-          - trail_tag_name: "Scenic"
+    # ---------- ACTIVITIES ----------
+    ActivityPhoto:
+      type: object
+      properties:
+        photo_url:
+          type: string
+        caption:
+          type: string
+
+    ActivityCreate:
+      type: object
+      required:
+        - user_name
+        - trail_name
+      properties:
+        user_name:
+          type: string
+        trail_name:
+          type: string
+        length:
+          type: number
+        elevation_gain:
+          type: number
+        moving_time:
+          type: string
+        total_time:
+          type: string
+        calories:
+          type: number
+        avg_pace:
+          type: number
+        notes:
+          type: string
+        rating:
+          type: number
         photos:
-          - photo_url: "https://example.com/forest_view_updated.jpg"
-            caption: "Updated forest view"
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityPhoto"
+      example:
+        user_name: "Ada Lovelace"
+        trail_name: "Forest Adventure"
+        length: 5.2
+        elevation_gain: 120
+        moving_time: "5400"
+        total_time: "6000"
+        calories: 350
+        avg_pace: 7.5
+        notes: "Great hike today"
+        rating: 4
+        photos:
+          - photo_url: "https://example.com/photo1.jpg"
+            caption: "Start of the trail"
+          - photo_url: "https://example.com/photo2.jpg"
+            caption: "Beautiful view"
+
+    ActivityUpdate:
+      type: object
+      properties:
+        user_name:
+          type: string
+        trail_name:
+          type: string
+        length:
+          type: number
+        elevation_gain:
+          type: number
+        moving_time:
+          type: string
+        total_time:
+          type: string
+        calories:
+          type: number
+        avg_pace:
+          type: number
+        notes:
+          type: string
+        rating:
+          type: number
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityPhoto"
+      example:
+        user_name: "Ada Lovelace"
+        trail_name: "Forest Adventure"
+        length: 5.5
+        elevation_gain: 125
+        moving_time: "5500"
+        total_time: "6100"
+        calories: 360
+        avg_pace: 7.4
+        notes: "Updated hike details, slightly longer route"
+        rating: 5
+        photos:
+          - photo_url: "https://example.com/photo1_updated.jpg"
+            caption: "Updated start of the trail"
+          - photo_url: "https://example.com/photo2_updated.jpg"
+            caption: "Even more beautiful view"
 
   parameters:
     trail_id:
@@ -176,8 +243,15 @@ components:
       required: true
       schema:
         type: integer
+    activity_id:
+      name: activity_id
+      in: path
+      required: true
+      schema:
+        type: integer
 
 paths:
+  # ---------- TRAILS ----------
   /trails:
     get:
       operationId: "trails.read_all"
@@ -239,3 +313,66 @@ paths:
       responses:
         "200":
           description: "Trail deleted"
+
+  # ---------- ACTIVITIES ----------
+  /activities:
+    get:
+      operationId: "activities.read_all"
+      tags: ["Activities"]
+      summary: "Get all activities"
+      responses:
+        "200":
+          description: "List of all activities"
+
+    post:
+      operationId: "activities.create"
+      tags: ["Activities"]
+      summary: "Create a new activity with photos"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              x-body-name: "activity_data"
+              $ref: "#/components/schemas/ActivityCreate"
+      responses:
+        "201":
+          description: "Activity created"
+
+  /activities/{activity_id}:
+    get:
+      operationId: "activities.read_one"
+      tags: ["Activities"]
+      summary: "Get an activity by ID"
+      parameters:
+        - $ref: "#/components/parameters/activity_id"
+      responses:
+        "200":
+          description: "Activity data"
+
+    put:
+      operationId: "activities.update"
+      tags: ["Activities"]
+      summary: "Update an activity (fields and photos)"
+      parameters:
+        - $ref: "#/components/parameters/activity_id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              x-body-name: "activity_data"
+              $ref: "#/components/schemas/ActivityUpdate"
+      responses:
+        "200":
+          description: "Activity updated"
+
+    delete:
+      operationId: "activities.delete"
+      tags: ["Activities"]
+      summary: "Delete an activity"
+      parameters:
+        - $ref: "#/components/parameters/activity_id"
+      responses:
+        "200":
+          description: "Activity deleted"

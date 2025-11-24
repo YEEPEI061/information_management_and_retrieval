@@ -151,11 +151,11 @@ with app.app_context():
     sample_activities = [
         Activity(
             trail_id=trail_objs[0].trail_id,
-            user_id=user_objs[2].user_id,  # Ada
+            user_id=user_objs[2].user_id,
             length=5.2,
             elevation_gain=120.5,
-            moving_time=60,
-            total_time=75,
+            moving_time=6000,
+            total_time=7500,
             calories=500,
             avg_pace=12.3,
             notes="Morning hike through the forest",
@@ -164,11 +164,11 @@ with app.app_context():
         ),
         Activity(
             trail_id=trail_objs[1].trail_id,
-            user_id=user_objs[0].user_id,  # Grace
+            user_id=user_objs[0].user_id,
             length=3.8,
             elevation_gain=50,
-            moving_time=45,
-            total_time=60,
+            moving_time=4500,
+            total_time=6000,
             calories=350,
             avg_pace=11.0,
             notes="Evening walk along the river",
