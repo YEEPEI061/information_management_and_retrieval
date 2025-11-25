@@ -6,19 +6,15 @@ from models import (
 )
 import requests
 
-AUTH_API_URL = "https://web.socem.plymouth.ac.uk/COMP2001/auth/api/users"
-
 activity_schema = ActivitySchema()
 activities_schema = ActivitySchema(many=True)
 
 
 def validate_user(user_id):
-    """Validate user locally or from external Auth API."""
+    """Validate user locally."""
     user = User.query.get(user_id)
     if not user:
-        resp = requests.get(f"{AUTH_API_URL}/{user_id}")
-        if resp.status_code != 200:
-            abort(404, f"User {user_id} not found.")
+        abort(404, f"User {user_id} not found.")
         data = resp.json()
 
         user = User(
@@ -29,6 +25,14 @@ def validate_user(user_id):
         )
         db.session.add(user)
         db.session.commit()
+    return user
+
+
+def validate_user_by_name(username: str) -> User:
+    """Validate user locally only by username."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        abort(404, f"User '{username}' not found.")
     return user
 
 
@@ -218,28 +222,6 @@ def update(activity_id, activity_data):
     except Exception as e:
         db.session.rollback()
         abort(500, description=str(e))
-
-
-def validate_user_by_name(username: str) -> User:
-    """Validate user locally or fetch from external auth API by username."""
-    user = User.query.filter_by(username=username).first()
-    if user:
-        return user
-
-    # If not found locally, fetch from external Auth API
-    resp = requests.get(f"{AUTH_API_URL}?username={username}")
-    if resp.status_code != 200:
-        abort(404, f"User '{username}' not found in Auth API.")
-    data = resp.json()
-    user = User(
-        user_id=data["user_id"],
-        username=data["username"],
-        email=data.get("email"),
-        role=data.get("role")
-    )
-    db.session.add(user)
-    db.session.commit()
-    return user
 
 
 def delete(activity_id):

@@ -221,7 +221,7 @@ trails_schema = TrailSchema(many=True)
 
 class TrailFullDetails(db.Model):
     __tablename__ = "v_trail_full_details"
-    __table_args__ = {"schema": "CW1"}
+    __table_args__ = {"schema": "CW2"}
     __mapper_args__ = {"primary_key": ["trail_id"]} 
 
     trail_id = db.Column(db.BigInteger, primary_key=True)

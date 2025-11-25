@@ -1,36 +1,26 @@
 from flask import render_template, request, jsonify
 import requests
 import config
-from models import Trail, RouteType, Difficulty, TrailTag, Location, User
+from models import Trail, Activity, UserList
 
 app = config.connex_app
 app.add_api(config.basedir / "swagger.yml")
 
-# ---------- Flask routes ----------
-
 @app.route("/")
 def home():
     trails = Trail.query.all()
-    return render_template("home.html", trails=trails)
+    activities = Activity.query.all()
+    activities_with_trail = []
+    for act in activities:
+        trail_name = None
+        if act.trail_id:
+            trail = Trail.query.get(act.trail_id)
+            trail_name = trail.trail_name if trail else None
+        act.trail_name = trail_name
+        activities_with_trail.append(act)
+    userlists = UserList.query.all()
+    return render_template("home.html", trails=trails, activities=activities_with_trail, userlists=userlists)
 
-# ---------- Login route ----------
-
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.json  # gets JSON from front-end
-    # Forward the POST to the Auth API
-    resp = requests.post(
-        "https://web.socem.plymouth.ac.uk/COMP2001/auth/api/users",
-        json=data
-    )
-    try:
-        # Return JSON to front-end
-        return jsonify(resp.json()), resp.status_code
-    except ValueError:
-        # If response is not JSON, return raw text
-        return resp.text, resp.status_code
-
-# ---------- Run app ----------
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8001, debug=True)

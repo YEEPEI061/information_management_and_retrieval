@@ -8,17 +8,12 @@ from models import (
 )
 import requests
 
-AUTH_API_URL = "https://web.socem.plymouth.ac.uk/COMP2001/auth/api/users"
-
-
 # VALIDATION HELPERS
 def validate_user(user_id):
     """Validate user locally or via Auth API."""
     user = User.query.get(user_id)
     if not user:
-        resp = requests.get(f"{AUTH_API_URL}/{user_id}")
-        if resp.status_code != 200:
-            abort(404, f"User {user_id} not found.")
+        abort(404, f"User {user_id} not found.")
         data = resp.json()
         user = User(
             user_id=data["user_id"],

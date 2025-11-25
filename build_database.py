@@ -57,8 +57,8 @@ with app.app_context():
 
     # Users
     users_data = [
-        {"username": "Grace", "email": "grace@plymouth.ac.uk", "role": "user"},
-        {"username": "Tim Berners-Lee", "email": "tim@plymouth.ac.uk", "role": "user"},
+        {"username": "Grace", "email": "grace@plymouth.ac.uk", "role": "admin"},
+        {"username": "Tim Berners-Lee", "email": "tim@plymouth.ac.uk", "role": "admin"},
         {"username": "Ada Lovelace", "email": "ada@plymouth.ac.uk", "role": "user"}
     ]
     user_objs = []
@@ -216,11 +216,13 @@ with app.app_context():
         UserList(
             name="Favorite Trails",
             user_id=user_objs[2].user_id,
+            trail_id=trail_objs[0].trail_id,
             visibility="public"
         ),
         UserList(
             name="Weekend Plans",
-            user_id=user_objs[1].user_id,
+            user_id=user_objs[1].user_id,\
+            trail_id=trail_objs[1].trail_id,
             visibility="public"
         )
     ]

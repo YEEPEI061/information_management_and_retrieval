@@ -3,90 +3,133 @@
   <head>
     <meta charset="UTF-8" />
     <title>Trail Microservice</title>
-    <script>
-      async function loginUser(event) {
-        event.preventDefault();
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-
-        try {
-          const response = await fetch("/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-
-          if (!response.ok) {
-            alert("Login failed! Check your email and password.");
-            return;
-          }
-
-          const data = await response.json();
-          console.log("API response:", data);
-
-          if (
-            Array.isArray(data) &&
-            data[0] === "Verified" &&
-            data[1] === "True"
-          ) {
-            localStorage.setItem("user", JSON.stringify({ email }));
-            document.getElementById("loginForm").style.display = "none";
-            document.getElementById(
-              "userInfo"
-            ).innerText = `Logged in as: ${email}`;
-          } else {
-            alert("Login failed! Invalid credentials.");
-          }
-        } catch (err) {
-          console.error(err);
-          alert("Error logging in");
-        }
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
       }
-    </script>
+      .card {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+      }
+      h2 {
+        margin-top: 40px;
+      }
+      ul {
+        margin-top: 5px;
+      }
+    </style>
   </head>
+
   <body>
     <h1>Trail Microservice</h1>
 
-    <!-- Login Form -->
-    <div id="loginForm">
-      <h2>Login</h2>
-      <form onsubmit="loginUser(event)">
-        <label>Email: <input type="email" id="email" required /></label
-        ><br /><br />
-        <label>Password: <input type="password" id="password" required /></label
-        ><br /><br />
-        <button type="submit">Login</button>
-      </form>
-    </div>
-
-    <div id="userInfo"></div>
-
-    <h2>Trails Overview</h2>
+    <!-- ==========================
+         TRAILS SECTION
+    ============================ -->
+    <h2>All Trails</h2>
 
     {% for trail in trails %}
-    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px">
+    <div class="card">
       <h3>{{ trail.trail_name }}</h3>
+
       <p><strong>Description:</strong> {{ trail.description }}</p>
       <p><strong>Length:</strong> {{ trail.length }} km</p>
       <p><strong>Elevation Gain:</strong> {{ trail.elevation_gain }} m</p>
       <p><strong>Estimated Time:</strong> {{ trail.estimated_time }} hrs</p>
+
       <p><strong>Route Type:</strong> {{ trail.route_type.route_type_name }}</p>
       <p><strong>Difficulty:</strong> {{ trail.difficulty.difficulty_name }}</p>
       <p><strong>Location:</strong> {{ trail.location.location_name }}</p>
+
       <p>
-        <strong>Tags:</strong> {% for tag in trail.tags %} {{ tag.trail_tag_name
-        }}{% if not loop.last %}, {% endif %}{% endfor %}
+        <strong>Tags:</strong>
+        {% for tag in trail.tags %}
+          {{ tag.trail_tag_name }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
       </p>
 
-      <h4>Waypoints:</h4>
+      <h4>Waypoints</h4>
       <ul>
         {% for wp in trail.waypoints %}
         <li>
-          {{ wp.sequence_no }} - {{ wp.waypoint_name }} (Lat: {{ wp.latitude }},
-          Lon: {{ wp.longitude }})
+          {{ wp.sequence_no }} — {{ wp.waypoint_name }}
+          (Lat: {{ wp.latitude }}, Long: {{ wp.longitude }})
         </li>
         {% endfor %}
       </ul>
+
+      <h4>Photos</h4>
+      <ul>
+        {% for photo in trail.photos %}
+        <li>
+          <img src="{{ photo.photo_url }}" alt="Trail photo"
+               style="max-width:150px; display:block; margin-bottom:5px;" />
+          {{ photo.caption }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+
+    <!-- ==========================
+         ACTIVITIES SECTION
+    ============================ -->
+    <h2>All Activities</h2>
+
+    {% for act in activities %}
+    <div class="card">
+      <h3>Activity by {{ act.user.username }}</h3>
+
+      <p><strong>Trail:</strong> {{ act.trail_name }}</p>
+      <p><strong>Length:</strong> {{ act.length }} km</p>
+      <p><strong>Elevation Gain:</strong> {{ act.elevation_gain }} m</p>
+      <p><strong>Moving Time:</strong> {{ act.moving_time }}s</p>
+      <p><strong>Total Time:</strong> {{ act.total_time }}s</p>
+      <p><strong>Calories:</strong> {{ act.calories }}</p>
+      <p><strong>Average Pace:</strong> {{ act.avg_pace }} min/km</p>
+      <p><strong>Rating:</strong> {{ act.rating }}/5</p>
+
+      <p><strong>Notes:</strong> {{ act.notes }}</p>
+
+      <h4>Photos</h4>
+      <ul>
+        {% for photo in act.photos %}
+        <li>
+          <img src="{{ photo.photo_url }}" alt="Activity photo"
+               style="max-width:150px; display:block; margin-bottom:5px;" />
+          {{ photo.caption }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+
+    <!-- ==========================
+         USER LISTS SECTION
+    ============================ -->
+    <h2>All User Lists</h2>
+
+    {% for ul in userlists %}
+    <div class="card">
+      <h3>{{ ul.name }}</h3>
+
+      <p><strong>User:</strong> {{ ul.user.username }}</p>
+
+      <p>
+        <strong>Trail:</strong>
+        {% if ul.trail_name %}
+          {{ ul.trail_name }}
+        {% else %}
+          <i>No trail selected</i>
+        {% endif %}
+      </p>
+
+      <p><strong>Visibility:</strong> {{ ul.visibility }}</p>
+      <p><strong>Created:</strong> {{ ul.created_at }}</p>
+      <p><strong>Updated:</strong> {{ ul.updated_at }}</p>
     </div>
     {% endfor %}
   </body>
