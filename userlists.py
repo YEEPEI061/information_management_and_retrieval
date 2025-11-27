@@ -80,10 +80,10 @@ def read_one(user_list_id):
     return jsonify(ul_dict), 200
 
 
-def create(userlist_data):
+def create(user_list_data):
     try:
-        username = userlist_data.get("user_name")
-        trail_name = userlist_data.get("trail_name")
+        username = user_list_data.get("user_name")
+        trail_name = user_list_data.get("trail_name")
 
         if not username:
             abort(400, "Missing required field: user_name")
@@ -92,16 +92,16 @@ def create(userlist_data):
 
         if trail_name:
             trail = validate_trail_by_name(trail_name)
-            userlist_data["trail_id"] = trail.trail_id
+            user_list_data["trail_id"] = trail.trail_id
         else:
-            userlist_data["trail_id"] = None
+            user_list_data["trail_id"] = None
 
-        userlist_data["user_id"] = user.user_id
+        user_list_data["user_id"] = user.user_id
 
-        userlist_data.pop("user_name", None)
-        userlist_data.pop("trail_name", None)
+        user_list_data.pop("user_name", None)
+        user_list_data.pop("trail_name", None)
 
-        new_list = userlist_schema.load(userlist_data, session=db.session)
+        new_list = userlist_schema.load(user_list_data, session=db.session)
         db.session.add(new_list)
         db.session.commit()
 
@@ -119,26 +119,26 @@ def create(userlist_data):
         abort(500, description=str(e))
 
 
-def update(user_list_id, userlist_data):
+def update(user_list_id, user_list_data):
     try:
         ul = UserList.query.get(user_list_id)
         if not ul:
             abort(404, f"UserList {user_list_id} not found.")
 
-        if "username" in userlist_data:
-            username = userlist_data.pop("user_name")
+        if "username" in user_list_data:
+            username = user_list_data.pop("user_name")
             user = validate_user_by_name(username)
             ul.user_id = user.user_id
 
-        if "trail_name" in userlist_data:
-            trail_name = userlist_data.pop("trail_name")
+        if "trail_name" in user_list_data:
+            trail_name = user_list_data.pop("trail_name")
             if trail_name:
                 trail = validate_trail_by_name(trail_name)
                 ul.trail_id = trail.trail_id
             else:
                 ul.trail_id = None
 
-        for key, value in userlist_data.items():
+        for key, value in user_list_data.items():
             setattr(ul, key, value)
 
         db.session.commit()

@@ -18,8 +18,18 @@ def home():
             trail_name = trail.trail_name if trail else None
         act.trail_name = trail_name
         activities_with_trail.append(act)
+
     userlists = UserList.query.all()
-    return render_template("home.html", trails=trails, activities=activities_with_trail, userlists=userlists)
+    userlists_with_trail = []
+    for ul in userlists:
+        trail_name = None
+        if ul.trail_id:
+            trail = Trail.query.get(ul.trail_id)
+            trail_name = trail.trail_name if trail else None
+        ul.trail_name = trail_name
+        userlists_with_trail.append(ul)
+
+    return render_template("home.html", trails=trails, activities=activities_with_trail, userlists=userlists_with_trail)
 
 
 if __name__ == "__main__":

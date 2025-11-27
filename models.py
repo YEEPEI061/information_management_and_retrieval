@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from config import db, ma
-from marshmallow import fields
+from marshmallow import fields, validate
 
 class User(db.Model):
     __tablename__ = "users"
@@ -38,6 +38,9 @@ class RouteType(db.Model):
     __table_args__ = {"schema": "CW2"}
     route_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     route_type_name = db.Column(db.String(50), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+
 
 class RouteTypeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -50,6 +53,9 @@ class Difficulty(db.Model):
     __table_args__ = {"schema": "CW2"}
     difficulty_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     difficulty_name = db.Column(db.String(50), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+
 
 class DifficultySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -62,6 +68,9 @@ class TrailTag(db.Model):
     __table_args__ = {"schema": "CW2"}
     trail_tag_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     trail_tag_name = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
+
 
 class TrailTagSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -128,6 +137,17 @@ class ActivitySchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
+    user_id = fields.Int(required=True)
+    trail_id = fields.Int(required=True)
+    notes = fields.Str(validate=validate.Length(max=500))
+    rating = fields.Int(validate=validate.Range(min=1, max=5))
+    visibility = fields.Str(validate=validate.OneOf(["public", "private", "friends"]), missing="public")
+    length = fields.Float(validate=validate.Range(min=0), required=True)
+    elevation_gain = fields.Float(validate=validate.Range(min=0))
+    moving_time = fields.Int(validate=validate.Range(min=0), required=True)
+    total_time = fields.Int(validate=validate.Range(min=0), required=True)
+    calories = fields.Int(validate=validate.Range(min=0))
+    avg_pace = fields.Float(validate=validate.Range(min=0))
 
 
 class Photo(db.Model):
@@ -174,6 +194,12 @@ class UserListSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
+    name = fields.String(required=True, validate=validate.Length(max=100))
+    visibility = fields.String(required=True, validate=validate.OneOf(["public", "private", "friends"]))
+    
+    user_id = fields.Integer(required=True)
+    trail_id = fields.Integer(allow_none=True)
+
 
 
 class Trail(db.Model):
@@ -209,6 +235,17 @@ class TrailSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
         include_relationships = True
+
+    trail_name = fields.Str(required=True, validate=validate.Length(max=100))
+    description = fields.Str(validate=validate.Length(max=1000))
+    length = fields.Float(required=True, validate=validate.Range(min=0))
+    elevation_gain = fields.Float(validate=validate.Range(min=0))
+    estimated_time = fields.Float(validate=validate.Range(min=0))
+    route_type_id = fields.Int(required=True)
+    difficulty_id = fields.Int(required=True)
+    location_id = fields.Int(required=True)
+    created_by = fields.Int(required=True)
+    updated_by = fields.Int()
 
     waypoints = fields.Nested(WaypointSchema, many=True)
     tags = fields.Nested(TrailTagSchema, many=True)

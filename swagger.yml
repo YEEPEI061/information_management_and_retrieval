@@ -9,7 +9,7 @@ servers:
 
 components:
   schemas:
-    # ---------- TRAILS ----------
+    # TRAILS
     Waypoint:
       type: object
       properties:
@@ -314,7 +314,6 @@ components:
         name: "Updated Weekend Escapades"
         visibility: "private"
 
-
   parameters:
     trail_id:
       name: trail_id
@@ -475,7 +474,7 @@ paths:
         content:
           application/json:
             schema:
-              x-body-name: "userlist_data"
+              x-body-name: "user_list_data"
               $ref: "#/components/schemas/UserListCreate"
       responses:
         "201":
@@ -511,7 +510,7 @@ paths:
         content:
           application/json:
             schema:
-              x-body-name: "userlist_data"
+              x-body-name: "user_list_data"
               $ref: "#/components/schemas/UserListUpdate"
       responses:
         "200":
@@ -530,3 +529,41 @@ paths:
       responses:
         "200":
           description: "User list deleted"
+
+  /login:
+    post:
+      operationId: "login.login"
+      tags: ["Authentication"]
+      summary: User Login
+      description: Authenticate user using Plymouth COMP2001 external auth service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: "tim@plymouth.ac.uk"
+                password:
+                  type: string
+                  example: "COMP2001!"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "valid-user-token"
+        "401":
+          description: Invalid email or password
+        "500":
+          description: Authentication service error
