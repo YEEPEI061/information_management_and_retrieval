@@ -1,6 +1,7 @@
 from flask import jsonify, abort
 from config import db
 from models import UserList, UserListSchema, User, Trail
+from sqlalchemy.exc import IntegrityError
 
 userlist_schema = UserListSchema()
 userlists_schema = UserListSchema(many=True)
@@ -53,6 +54,7 @@ def read_all():
 
         ul_dict.pop("user_id", None)
         ul_dict.pop("trail_id", None)
+        ul_dict.pop("user_list_id", None)
 
         results.append(ul_dict)
 
@@ -76,6 +78,7 @@ def read_one(user_list_id):
 
     ul_dict.pop("user_id", None)
     ul_dict.pop("trail_id", None)
+    ul_dict.pop("user_list_id", None)
 
     return jsonify(ul_dict), 200
 
@@ -84,9 +87,31 @@ def create(user_list_data):
     try:
         username = user_list_data.get("user_name")
         trail_name = user_list_data.get("trail_name")
+        list_name = user_list_data.get("name")
 
         if not username:
             abort(400, "Missing required field: user_name")
+        if not list_name:
+            abort(400, "Missing required field: name")
+
+        # Validate Visibility
+        allowed_visibility = ["public", "private", "friends"]
+        visibility = user_list_data.get("visibility")
+
+        if visibility:
+            if visibility.lower() not in allowed_visibility:
+                abort(400, description=f"Invalid visibility '{visibility}'. Allowed: Public, Private, Friends.")
+            user_list_data["visibility"] = visibility.lower() 
+        else:
+            user_list_data["visibility"] = "public"
+
+        # Duplicate name check
+        existing = UserList.query.filter(
+            UserList.name.ilike(list_name)
+        ).first()
+
+        if existing:
+            abort(400, description=f"User list name '{list_name}' already exists.")
 
         user = validate_user_by_name(username)
 
@@ -111,8 +136,17 @@ def create(user_list_data):
 
         ul_dict.pop("user_id", None)
         ul_dict.pop("trail_id", None)
+        ul_dict.pop("user_list_id", None)
 
         return jsonify(ul_dict), 201
+
+    except IntegrityError as e:
+        db.session.rollback()
+        error_text = str(e.orig).lower()
+        if "unique" in error_text or "duplicate" in error_text:
+            abort(400, description="A list with this name already exists. Please choose a different name.")
+
+        abort(400, description="Database constraint error.")
 
     except Exception as e:
         db.session.rollback()
@@ -125,7 +159,16 @@ def update(user_list_id, user_list_data):
         if not ul:
             abort(404, f"UserList {user_list_id} not found.")
 
-        if "username" in user_list_data:
+        # Validate visibility (only if sent)
+        allowed_visibility = ["public", "private", "friends"]
+        visibility = user_list_data.get("visibility")
+
+        if visibility is not None:  # user wants to update it
+            if visibility.lower() not in allowed_visibility:
+                abort(400, description=f"Invalid visibility '{visibility}'. Allowed: Public, Private, Friends.")
+            ul.visibility = visibility.lower() 
+
+        if "user_name" in user_list_data:
             username = user_list_data.pop("user_name")
             user = validate_user_by_name(username)
             ul.user_id = user.user_id
@@ -154,8 +197,17 @@ def update(user_list_id, user_list_data):
 
         ul_dict.pop("user_id", None)
         ul_dict.pop("trail_id", None)
+        ul_dict.pop("user_list_id", None)
 
         return jsonify(ul_dict), 200
+
+    except IntegrityError as e:
+        db.session.rollback()
+        error_text = str(e.orig).lower()
+        if "unique" in error_text or "duplicate" in error_text:
+            abort(400, description="A list with this name already exists. Please choose a different name.")
+
+        abort(400, description="Database constraint error.")
 
     except Exception as e:
         db.session.rollback()

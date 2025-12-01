@@ -181,7 +181,7 @@ class UserList(db.Model):
     user_list_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     user_id = db.Column(db.BigInteger, db.ForeignKey("CW2.users.user_id"), nullable=False)
     trail_id = db.Column(db.BigInteger, db.ForeignKey("CW2.trails.trail_id"), nullable=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False, unique=True)
     visibility = db.Column(db.String(20), nullable=False, default="public")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
@@ -206,7 +206,7 @@ class Trail(db.Model):
     __tablename__ = "trails"
     __table_args__ = {"schema": "CW2"}
     trail_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    trail_name = db.Column(db.String(100), nullable=False)
+    trail_name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text)
     length = db.Column(db.Numeric(7,2), nullable=False)
     elevation_gain = db.Column(db.Float)

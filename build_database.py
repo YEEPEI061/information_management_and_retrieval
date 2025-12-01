@@ -254,7 +254,7 @@ with app.app_context():
             trail_id=trail_objs[0].trail_id,
             visibility="public",
             created_at=datetime.now(),
-         updated_at=None
+            updated_at=None
         ),
         UserList(
             name="Weekend Plans",

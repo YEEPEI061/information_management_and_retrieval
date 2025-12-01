@@ -52,7 +52,6 @@ def read_all():
         photos = Photo.query.filter_by(activity_id=act.activity_id).all()
         photos_list = [
             {
-                "photo_id": p.photo_id,
                 "photo_url": p.photo_url,
                 "caption": p.caption,
                 "created_at": p.created_at.isoformat(),
@@ -68,6 +67,7 @@ def read_all():
 
 
         # Remove id from output
+        act_dict.pop("activity_id", None)
         act_dict.pop("user_id", None)
         act_dict.pop("trail_id", None)
 
@@ -85,7 +85,6 @@ def read_one(activity_id):
     photos = Photo.query.filter_by(activity_id=act.activity_id).all()
     photos_list = [
         {
-            "photo_id": p.photo_id,
             "photo_url": p.photo_url,
             "caption": p.caption,
             "created_at": p.created_at.isoformat(),
@@ -99,7 +98,7 @@ def read_one(activity_id):
     trail = Trail.query.get(act.trail_id)
     act_dict["trail_name"] = trail.trail_name if trail else None
 
-
+    act_dict.pop("activity_id", None)
     act_dict.pop("user_id", None)
     act_dict.pop("trail_id", None)
 
@@ -117,12 +116,26 @@ def create(activity_data):
         if not user_name or not trail_name:
             abort(400, "Missing required fields: user_name or trail_name.")
 
+        # Validate Visibility
+        allowed_visibility = ["public", "private", "friends"]
+        visibility = activity_data.get("visibility")
+
+        if visibility:
+            if visibility.lower() not in allowed_visibility:
+                abort(400, description=f"Invalid visibility '{visibility}'. Allowed: Public, Private, Friends.")
+            activity_data["visibility"] = visibility.lower()
+        else:
+            activity_data["visibility"] = "public"
+
+      
         user = User.query.filter_by(username=user_name).first()
         if not user:
             user = validate_user_by_name(user_name)
+
         trail = Trail.query.filter_by(trail_name=trail_name).first()
         if not trail:
             abort(404, f"Trail '{trail_name}' not found.")
+
 
         # Replace names with id for saving
         activity_data["user_id"] = user.user_id
@@ -146,11 +159,11 @@ def create(activity_data):
         act_dict = activity_schema.dump(new_activity)
         act_dict["user_name"] = user.username
         act_dict["trail_name"] = trail.trail_name
+        act_dict.pop("activity_id", None)
         act_dict.pop("user_id", None)
         act_dict.pop("trail_id", None)
         act_dict["photos"] = [
             {
-                "photo_id": p.photo_id,
                 "photo_url": p.photo_url,
                 "caption": p.caption,
                 "created_at": p.created_at.isoformat(),
@@ -173,6 +186,16 @@ def update(activity_id, activity_data):
 
         user = act.user
         trail = Trail.query.get(act.trail_id)
+
+        # Validate visibility (only if sent)
+        allowed_visibility = ["public", "private", "friends"]
+        visibility = activity_data.get("visibility")
+
+        if visibility is not None:
+            if visibility.lower() not in allowed_visibility:
+                abort(400, description=f"Invalid visibility '{visibility}'. Allowed: Public, Private, Friends.")
+            act.visibility = visibility.lower()
+
 
         if "user_name" in activity_data:
             user_name = activity_data.pop("user_name")
@@ -205,11 +228,11 @@ def update(activity_id, activity_data):
         act_dict = activity_schema.dump(act)
         act_dict["user_name"] = user.username if user else None
         act_dict["trail_name"] = trail.trail_name if trail else None
+        act_dict.pop("activity_id", None)
         act_dict.pop("user_id", None)
         act_dict.pop("trail_id", None)
         act_dict["photos"] = [
             {
-                "photo_id": p.photo_id,
                 "photo_url": p.photo_url,
                 "caption": p.caption,
                 "created_at": p.created_at.isoformat(),

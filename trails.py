@@ -7,6 +7,7 @@ from models import (
     trail_schema, trail_full_schema,
 )
 import requests
+from sqlalchemy.exc import IntegrityError
 
 # VALIDATION HELPERS
 def validate_user(user_id):
@@ -59,7 +60,6 @@ def read_all():
             photos = Photo.query.filter_by(activity_id=act.activity_id).all()
             photos_list = [
                 {
-                    "photo_id": p.photo_id,
                     "photo_url": p.photo_url,
                     "caption": p.caption,
                     "created_at": p.created_at.isoformat(),
@@ -67,8 +67,7 @@ def read_all():
             ]
 
             activities_list.append({
-                "activity_id": act.activity_id,
-                "user_id": act.user_id,
+                "user_name": User.query.get(act.user_id).username if User.query.get(act.user_id) else None,
                 "length": float(act.length) if act.length else None,
                 "elevation_gain": float(act.elevation_gain) if act.elevation_gain else None,
                 "moving_time": act.moving_time,
@@ -84,8 +83,7 @@ def read_all():
         user_lists_objs = UserList.query.filter_by(trail_id=trail.trail_id).all()
         user_lists = [
             {
-                "user_list_id": ul.user_list_id,
-                "user_id": ul.user_id,
+                "user_name": User.query.get(ul.user_id).username if User.query.get(ul.user_id) else None,
                 "name": ul.name,
                 "visibility": ul.visibility
             } for ul in user_lists_objs
@@ -95,6 +93,7 @@ def read_all():
         trail_dict.pop("total_waypoints", None)
         trail_dict.pop("total_activities", None)
         trail_dict.pop("total_photos", None)
+        trail_dict.pop("trail_id", None)
 
         trail_dict["waypoints"] = waypoints_list
         trail_dict["activities"] = activities_list
@@ -119,7 +118,6 @@ def read_one(trail_id):
         photos = Photo.query.filter_by(activity_id=act.activity_id).all()
         photos_list = [
             {
-                "photo_id": p.photo_id,
                 "photo_url": p.photo_url,
                 "caption": p.caption,
                 "created_at": p.created_at.isoformat(),
@@ -127,8 +125,7 @@ def read_one(trail_id):
         ]
 
         activities_list.append({
-            "activity_id": act.activity_id,
-            "user_id": act.user_id,
+            "user_name": User.query.get(act.user_id).username if User.query.get(act.user_id) else None,
             "length": float(act.length) if act.length else None,
             "elevation_gain": float(act.elevation_gain) if act.elevation_gain else None,
             "moving_time": act.moving_time,
@@ -141,7 +138,13 @@ def read_one(trail_id):
         })
 
     user_lists = UserList.query.filter_by(trail_id=trail.trail_id).all()
-    user_lists_list = [{"name": ul.name, "user_id": ul.user_id, "visibility": ul.visibility} for ul in user_lists]
+    user_lists_list = [
+        {
+            "name": ul.name, 
+            "user_name": User.query.get(ul.user_id).username if User.query.get(ul.user_id) else None,
+            "visibility": ul.visibility
+         } for ul in user_lists
+    ]
 
     trail_dict = trail_full_schema.dump(trail)
     trail_dict.pop("total_waypoints", None)
@@ -176,21 +179,27 @@ def create(trail_data):
             abort(400, description=f"User '{created_by_name}' not found")
         trail_data["created_by"] = user.user_id
 
+        allowed_route_types = ["loop", "out & back", "point to point"]
         if route_type_name:
+            if route_type_name.lower() not in allowed_route_types:
+                abort(400, description=f"Invalid route type '{route_type_name}'. Allowed values: Loop, Out & Back, Point to Point.")
+
             rt = RouteType.query.filter(RouteType.route_type_name.ilike(route_type_name)).first()
             if not rt:
-                rt = RouteType(route_type_name=route_type_name)
-                db.session.add(rt)
-                db.session.flush()
+                abort(400, description=f"Route type '{route_type_name}' does not exist in the database. Please insert it first.")
             trail_data["route_type_id"] = rt.route_type_id
 
+
+        allowed_difficulties = ["easy", "moderate", "hard"]
         if difficulty_name:
+            if difficulty_name.lower() not in allowed_difficulties:
+                abort(400, description=f"Invalid difficulty '{difficulty_name}'. Allowed values: Easy, Moderate, Hard.")
+
             df = Difficulty.query.filter(Difficulty.difficulty_name.ilike(difficulty_name)).first()
             if not df:
-                df = Difficulty(difficulty_name=difficulty_name)
-                db.session.add(df)
-                db.session.flush()
+                abort(400, description=f"Difficulty '{difficulty_name}' does not exist in the database. Please insert it first.")
             trail_data["difficulty_id"] = df.difficulty_id
+
 
         if location_name:
             loc = Location.query.filter(Location.location_name.ilike(location_name)).first()
@@ -235,7 +244,46 @@ def create(trail_data):
 
         # Commit everything
         db.session.commit()
-        return trail_schema.dump(new_trail), 201
+        result = trail_schema.dump(new_trail)
+        if new_trail.route_type:
+            result["route_type"] = new_trail.route_type.route_type_name
+        if new_trail.difficulty:
+            result["difficulty"] = new_trail.difficulty.difficulty_name
+        if new_trail.location:
+            result["location"] = new_trail.location.location_name
+        result.pop("difficulty_id", None)
+        result.pop("location_id", None)
+        result.pop("route_type_id", None)
+        result.pop("trail_id", None)
+        result.pop("creator", None)
+        result.pop("activities", None)
+        result.pop("user_lists", None)
+        result.pop("updated_by", None)
+
+        # Remove trail_id from waypoints
+        for wp in result.get("waypoints", []):
+            wp.pop("trail_id", None)
+            wp.pop("waypoint_id", None)
+            wp.pop("created_at", None)
+
+        for tag in result.get("tags", []):
+            tag.pop("trail_tag_id", None)
+            tag.pop("created_at", None)
+            tag.pop("updated_at", None)
+
+        result["created_by"] = new_trail.creator.username if new_trail.creator else None
+
+        return result, 201
+    
+    except IntegrityError as e:
+        db.session.rollback()
+
+        # Check if UNIQUE constraint failed (duplicate trail_name)
+        if "UQ__trails" in str(e.orig) or "duplicate key" in str(e.orig):
+            abort(400, description="Trail name already exists. Please choose a different name.")
+
+        # Other DB integrity errors
+        abort(400, description="Database constraint error.")
 
     except Exception as e:
         db.session.rollback()
@@ -261,20 +309,25 @@ def update(trail_id, trail_data):
                 abort(400, description=f"User '{updated_by_name}' not found")
             trail_data["updated_by"] = user.user_id
 
+        allowed_route_types = ["loop", "out & back", "point to point"]
         if route_type_name:
+            if route_type_name.lower() not in allowed_route_types:
+                abort(400, description=f"Invalid route type '{route_type_name}'. Allowed values: Loop, Out & Back, Point to Point.")
+
             rt = RouteType.query.filter(RouteType.route_type_name.ilike(route_type_name)).first()
             if not rt:
-                rt = RouteType(route_type_name=route_type_name)
-                db.session.add(rt)
-                db.session.flush()
+                abort(400, description=f"Route type '{route_type_name}' does not exist in the database. Please insert it first.")
             trail_data["route_type_id"] = rt.route_type_id
 
+
+        allowed_difficulties = ["easy", "moderate", "hard"]
         if difficulty_name:
+            if difficulty_name.lower() not in allowed_difficulties:
+                abort(400, description=f"Invalid difficulty '{difficulty_name}'. Allowed values: Easy, Moderate, Hard.")
+
             df = Difficulty.query.filter(Difficulty.difficulty_name.ilike(difficulty_name)).first()
             if not df:
-                df = Difficulty(difficulty_name=difficulty_name)
-                db.session.add(df)
-                db.session.flush()
+                abort(400, description=f"Difficulty '{difficulty_name}' does not exist in the database. Please insert it first.")
             trail_data["difficulty_id"] = df.difficulty_id
 
         if location_name:
@@ -323,7 +376,47 @@ def update(trail_id, trail_data):
                 trail.photos.append(Photo(**p))
 
         db.session.commit()
-        return trail_schema.dump(trail), 200
+        db.session.commit()
+        result = trail_schema.dump(trail)
+        if trail.route_type:
+            result["route_type"] = trail.route_type.route_type_name
+        if trail.difficulty:
+            result["difficulty"] = trail.difficulty.difficulty_name
+        if trail.location:
+            result["location"] = trail.location.location_name
+        result.pop("difficulty_id", None)
+        result.pop("location_id", None)
+        result.pop("route_type_id", None)
+        result.pop("trail_id", None)
+        result.pop("creator", None)
+        result.pop("activities", None)
+        result.pop("user_lists", None)
+        result.pop("updated_by", None)
+
+        # Remove trail_id from waypoints
+        for wp in result.get("waypoints", []):
+            wp.pop("trail_id", None)
+            wp.pop("waypoint_id", None)
+            wp.pop("created_at", None)
+
+        for tag in result.get("tags", []):
+            tag.pop("trail_tag_id", None)
+            tag.pop("created_at", None)
+            tag.pop("updated_at", None)
+
+        result["created_by"] = trail.creator.username if trail.creator else None
+
+        return result, 200
+
+    except IntegrityError as e:
+        db.session.rollback()
+
+        # Check if UNIQUE constraint failed (duplicate trail_name)
+        if "UQ__trails" in str(e.orig) or "duplicate key" in str(e.orig):
+            abort(400, description="Trail name already exists. Please choose a different name.")
+
+        # Other DB integrity errors
+        abort(400, description="Database constraint error.")
 
     except Exception as e:
         db.session.rollback()
