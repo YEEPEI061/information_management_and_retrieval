@@ -1,3 +1,4 @@
+from datetime import datetime
 from config import app, db
 from sqlalchemy import text
 from models import (
@@ -50,7 +51,11 @@ with app.app_context():
     # Locations
     location_objs = []
     for name in ["Forest Park", "River Valley"]:
-        loc = Location(location_name=name)
+        loc = Location(
+            location_name=name,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(loc)
         location_objs.append(loc)
     db.session.commit()
@@ -63,7 +68,11 @@ with app.app_context():
     ]
     user_objs = []
     for u in users_data:
-        user = User(**u)
+        user = User(
+            **u,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(user)
         user_objs.append(user)
     db.session.commit()
@@ -71,7 +80,11 @@ with app.app_context():
     # Route Types
     route_type_objs = []
     for name in ["Loop", "Out & Back", "Point to Point"]:
-        rt = RouteType(route_type_name=name)
+        rt = RouteType(
+            route_type_name=name,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(rt)
         route_type_objs.append(rt)
     db.session.commit()
@@ -79,7 +92,11 @@ with app.app_context():
     # Difficulties
     difficulty_objs = []
     for name in ["Easy", "Moderate", "Hard"]:
-        d = Difficulty(difficulty_name=name)
+        d = Difficulty(
+            difficulty_name=name,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(d)
         difficulty_objs.append(d)
     db.session.commit()
@@ -87,7 +104,11 @@ with app.app_context():
     # Trail Tags
     tag_objs = {}
     for name in ["Forest", "Scenic", "River", "Mountain", "Historic"]:
-        t = TrailTag(trail_tag_name=name)
+        t = TrailTag(
+            trail_tag_name=name,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(t)
         tag_objs[name] = t
     db.session.commit()
@@ -134,7 +155,11 @@ with app.app_context():
         tags = t.pop("tags", [])
         waypoints = t.pop("waypoints", [])
 
-        new_trail = Trail(**t)
+        new_trail = Trail(
+            **t,
+            created_at=datetime.now(),
+            updated_at=None
+        )
         db.session.add(new_trail)
 
         for wp in waypoints:
@@ -160,7 +185,9 @@ with app.app_context():
             avg_pace=12.3,
             notes="Morning hike through the forest",
             rating=5,
-            visibility="public"
+            visibility="public",
+            created_at=datetime.now(),
+            updated_at=None
         ),
         Activity(
             trail_id=trail_objs[1].trail_id,
@@ -173,7 +200,9 @@ with app.app_context():
             avg_pace=11.0,
             notes="Evening walk along the river",
             rating=4,
-            visibility="public"
+            visibility="public",
+            created_at=datetime.now(),
+            updated_at=None
         )
     ]
 
@@ -188,21 +217,27 @@ with app.app_context():
             activity_id=sample_activities[0].activity_id, 
             trail_id=None,
             photo_url="https://example.com/forest_view.jpg",
-            caption="Beautiful forest view"
+            caption="Beautiful forest view",
+            created_at=datetime.now(),
+            updated_at=None
         ),
         Photo(
             user_id=user_objs[1].user_id,
             activity_id=None,
             trail_id=trail_objs[0].trail_id, 
             photo_url="https://example.com/trail_path.jpg",
-            caption="Walking along the trail"
+            caption="Walking along the trail",
+            created_at=datetime.now(),
+            updated_at=None
         ),
         Photo(
             user_id=user_objs[2].user_id,
             activity_id=sample_activities[1].activity_id, 
             trail_id=trail_objs[1].trail_id, 
             photo_url="https://example.com/sunset_peak.jpg",
-            caption="Sunset from the mountain peak"
+            caption="Sunset from the mountain peak",
+            created_at=datetime.now(),
+            updated_at=None
         )
     ]
 
@@ -217,13 +252,17 @@ with app.app_context():
             name="Favorite Trails",
             user_id=user_objs[2].user_id,
             trail_id=trail_objs[0].trail_id,
-            visibility="public"
+            visibility="public",
+            created_at=datetime.now(),
+         updated_at=None
         ),
         UserList(
             name="Weekend Plans",
             user_id=user_objs[1].user_id,\
             trail_id=trail_objs[1].trail_id,
-            visibility="public"
+            visibility="public",
+            created_at=datetime.now(),
+            updated_at=None
         )
     ]
 
