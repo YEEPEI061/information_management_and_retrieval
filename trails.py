@@ -1,4 +1,4 @@
-from flask import abort, jsonify
+from flask import Flask, abort, jsonify
 from config import db
 from models import (
     Trail, Waypoint, TrailTag, Activity, Photo,
@@ -6,8 +6,22 @@ from models import (
     TrailFullDetails,  
     trail_schema, trail_full_schema,
 )
-import requests
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+
+app = Flask(__name__)
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    response = e.get_response()
+    # Replace the body with JSON
+    response.data = jsonify({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    }).data
+    response.content_type = "application/json"
+    return response
 
 # VALIDATION HELPERS
 def validate_user(user_id):
@@ -209,7 +223,6 @@ def create(trail_data):
                 db.session.flush()
             trail_data["location_id"] = loc.location_id
 
-        # Process nested items
         waypoints_data = trail_data.pop("waypoints", [])
         tags_data = trail_data.pop("tags", [])
         photos_data = trail_data.pop("photos", [])
@@ -217,7 +230,7 @@ def create(trail_data):
         # Create trail
         new_trail = trail_schema.load(trail_data, session=db.session)
         db.session.add(new_trail)
-        db.session.flush()  # Ensure trail_id is available for nested items
+        db.session.flush()
 
         # Waypoints
         for wp in waypoints_data:
@@ -237,12 +250,11 @@ def create(trail_data):
 
         # Photos
         for p in photos_data:
-            p["user_id"] = user.user_id              # photo owner = creator of trail
-            p["trail_id"] = new_trail.trail_id       # link photo to the trail
+            p["user_id"] = user.user_id
+            p["trail_id"] = new_trail.trail_id
 
             new_trail.photos.append(Photo(**p))
 
-        # Commit everything
         db.session.commit()
         result = trail_schema.dump(new_trail)
         if new_trail.route_type:
@@ -260,7 +272,6 @@ def create(trail_data):
         result.pop("user_lists", None)
         result.pop("updated_by", None)
 
-        # Remove trail_id from waypoints
         for wp in result.get("waypoints", []):
             wp.pop("trail_id", None)
             wp.pop("waypoint_id", None)
@@ -278,12 +289,13 @@ def create(trail_data):
     except IntegrityError as e:
         db.session.rollback()
 
-        # Check if UNIQUE constraint failed (duplicate trail_name)
         if "UQ__trails" in str(e.orig) or "duplicate key" in str(e.orig):
             abort(400, description="Trail name already exists. Please choose a different name.")
 
-        # Other DB integrity errors
         abort(400, description="Database constraint error.")
+
+    except HTTPException:
+        raise   
 
     except Exception as e:
         db.session.rollback()
@@ -293,7 +305,6 @@ def create(trail_data):
 # UPDATE TRAIL
 def update(trail_id, trail_data):
     try:
-        # Get existing trail
         trail = Trail.query.get(trail_id)
         if not trail:
             abort(404, description=f"Trail with id {trail_id} not found")
@@ -346,13 +357,11 @@ def update(trail_id, trail_data):
         for key, value in trail_data.items():
             setattr(trail, key, value)
 
-        # Update waypoints: replace existing with new ones
         if waypoints_data is not None:
             trail.waypoints.clear()
             for wp in waypoints_data:
                 trail.waypoints.append(Waypoint(**wp))
 
-        # Update tags: replace existing with new ones (create if missing)
         if tags_data is not None:
             trail.tags.clear()
             for t in tags_data:
@@ -366,7 +375,6 @@ def update(trail_id, trail_data):
                     db.session.flush()
                 trail.tags.append(tag)
 
-        # Update photos: replace existing with new ones
         if photos_data is not None:
             trail.photos.clear()
             for p in photos_data:
@@ -393,7 +401,6 @@ def update(trail_id, trail_data):
         result.pop("user_lists", None)
         result.pop("updated_by", None)
 
-        # Remove trail_id from waypoints
         for wp in result.get("waypoints", []):
             wp.pop("trail_id", None)
             wp.pop("waypoint_id", None)
@@ -411,12 +418,13 @@ def update(trail_id, trail_data):
     except IntegrityError as e:
         db.session.rollback()
 
-        # Check if UNIQUE constraint failed (duplicate trail_name)
         if "UQ__trails" in str(e.orig) or "duplicate key" in str(e.orig):
             abort(400, description="Trail name already exists. Please choose a different name.")
 
-        # Other DB integrity errors
         abort(400, description="Database constraint error.")
+
+    except HTTPException:
+        raise
 
     except Exception as e:
         db.session.rollback()

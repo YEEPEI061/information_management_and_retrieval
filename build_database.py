@@ -216,7 +216,7 @@ with app.app_context():
             user_id=user_objs[2].user_id,
             activity_id=sample_activities[0].activity_id, 
             trail_id=None,
-            photo_url="https://example.com/forest_view.jpg",
+            photo_url="https://www.alltrails.com/api/alltrails/v2/trails/10483180/photos/0?size=larger_wide&key=3p0t5s6b5g4g0e8k3c1j3w7y5c3m4t8i",
             caption="Beautiful forest view",
             created_at=datetime.now(),
             updated_at=None
@@ -225,7 +225,7 @@ with app.app_context():
             user_id=user_objs[1].user_id,
             activity_id=None,
             trail_id=trail_objs[0].trail_id, 
-            photo_url="https://example.com/trail_path.jpg",
+            photo_url="https://www.alltrails.com/api/alltrails/v2/trails/10030115/photos/0?size=larger_wide&key=3p0t5s6b5g4g0e8k3c1j3w7y5c3m4t8i",
             caption="Walking along the trail",
             created_at=datetime.now(),
             updated_at=None
@@ -234,7 +234,7 @@ with app.app_context():
             user_id=user_objs[2].user_id,
             activity_id=sample_activities[1].activity_id, 
             trail_id=trail_objs[1].trail_id, 
-            photo_url="https://example.com/sunset_peak.jpg",
+            photo_url="https://images.squarespace-cdn.com/content/v1/646648772e4407356e7ff993/b93bb174-3528-4fca-99ba-0688d6a43651/Mam+Tor+sunset",
             caption="Sunset from the mountain peak",
             created_at=datetime.now(),
             updated_at=None

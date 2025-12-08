@@ -199,6 +199,8 @@ components:
           type: string
         rating:
           type: number
+        visibility:
+          type: string
         photos:
           type: array
           items:
@@ -214,6 +216,7 @@ components:
         avg_pace: 7.5
         notes: "Great hike today"
         rating: 4
+        visibility: "friends"
         photos:
           - photo_url: "https://example.com/photo1.jpg"
             caption: "Start of the trail"
@@ -243,6 +246,8 @@ components:
           type: string
         rating:
           type: number
+        visibility:
+          type: string
         photos:
           type: array
           items:
@@ -258,6 +263,7 @@ components:
         avg_pace: 7.4
         notes: "Updated hike details, slightly longer route"
         rating: 5
+        visibility: "private"
         photos:
           - photo_url: "https://example.com/photo1_updated.jpg"
             caption: "Updated start of the trail"

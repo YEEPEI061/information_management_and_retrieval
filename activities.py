@@ -1,14 +1,27 @@
-from flask import jsonify, abort
+from flask import Flask, jsonify, abort
 from config import db
 from models import (
     Activity, ActivitySchema, Photo,
     User, Trail
 )
-import requests
+from werkzeug.exceptions import HTTPException
 
 activity_schema = ActivitySchema()
 activities_schema = ActivitySchema(many=True)
 
+
+app = Flask(__name__)
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    response = e.get_response()
+    response.data = jsonify({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    }).data
+    response.content_type = "application/json"
+    return response
 
 def validate_user(user_id):
     """Validate user locally."""
@@ -65,8 +78,6 @@ def read_all():
         trail = Trail.query.get(act.trail_id)
         act_dict["trail_name"] = trail.trail_name if trail else None
 
-
-        # Remove id from output
         act_dict.pop("activity_id", None)
         act_dict.pop("user_id", None)
         act_dict.pop("trail_id", None)
@@ -116,7 +127,6 @@ def create(activity_data):
         if not user_name or not trail_name:
             abort(400, "Missing required fields: user_name or trail_name.")
 
-        # Validate Visibility
         allowed_visibility = ["public", "private", "friends"]
         visibility = activity_data.get("visibility")
 
@@ -136,8 +146,6 @@ def create(activity_data):
         if not trail:
             abort(404, f"Trail '{trail_name}' not found.")
 
-
-        # Replace names with id for saving
         activity_data["user_id"] = user.user_id
         activity_data["trail_id"] = trail.trail_id
         activity_data.pop("user_name", None)
@@ -172,6 +180,9 @@ def create(activity_data):
         ]
 
         return jsonify(act_dict), 201
+    
+    except HTTPException:
+        raise 
 
     except Exception as e:
         db.session.rollback()
@@ -187,7 +198,6 @@ def update(activity_id, activity_data):
         user = act.user
         trail = Trail.query.get(act.trail_id)
 
-        # Validate visibility (only if sent)
         allowed_visibility = ["public", "private", "friends"]
         visibility = activity_data.get("visibility")
 
@@ -241,6 +251,9 @@ def update(activity_id, activity_data):
         ]
 
         return jsonify(act_dict), 200
+    
+    except HTTPException:
+        raise 
 
     except Exception as e:
         db.session.rollback()

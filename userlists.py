@@ -1,11 +1,25 @@
-from flask import jsonify, abort
+from flask import Flask, jsonify, abort
 from config import db
 from models import UserList, UserListSchema, User, Trail
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
 
 userlist_schema = UserListSchema()
 userlists_schema = UserListSchema(many=True)
 
+
+app = Flask(__name__)
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    response = e.get_response()
+    response.data = jsonify({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    }).data
+    response.content_type = "application/json"
+    return response
 
 # VALIDATION HELPERS
 def validate_user(user_id):
@@ -94,7 +108,6 @@ def create(user_list_data):
         if not list_name:
             abort(400, "Missing required field: name")
 
-        # Validate Visibility
         allowed_visibility = ["public", "private", "friends"]
         visibility = user_list_data.get("visibility")
 
@@ -148,6 +161,9 @@ def create(user_list_data):
 
         abort(400, description="Database constraint error.")
 
+    except HTTPException:
+        raise 
+
     except Exception as e:
         db.session.rollback()
         abort(500, description=str(e))
@@ -159,11 +175,10 @@ def update(user_list_id, user_list_data):
         if not ul:
             abort(404, f"UserList {user_list_id} not found.")
 
-        # Validate visibility (only if sent)
         allowed_visibility = ["public", "private", "friends"]
         visibility = user_list_data.get("visibility")
 
-        if visibility is not None:  # user wants to update it
+        if visibility is not None:
             if visibility.lower() not in allowed_visibility:
                 abort(400, description=f"Invalid visibility '{visibility}'. Allowed: Public, Private, Friends.")
             ul.visibility = visibility.lower() 
@@ -208,6 +223,9 @@ def update(user_list_id, user_list_data):
             abort(400, description="A list with this name already exists. Please choose a different name.")
 
         abort(400, description="Database constraint error.")
+
+    except HTTPException:
+        raise 
 
     except Exception as e:
         db.session.rollback()
