@@ -115,7 +115,6 @@ class Activity(db.Model):
     activity_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     user_id = db.Column(db.BigInteger, db.ForeignKey("CW2.users.user_id"), nullable=False)
     trail_id = db.Column(db.BigInteger, db.ForeignKey("CW2.trails.trail_id"), nullable=False)
-
     length = db.Column(db.Numeric(7,2))
     elevation_gain = db.Column(db.Numeric(7,2))
     moving_time = db.Column(db.Integer)
@@ -125,7 +124,6 @@ class Activity(db.Model):
     notes = db.Column(db.Text)
     rating = db.Column(db.Integer)
     visibility = db.Column(db.String(10), default="public")
-
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
 
@@ -158,7 +156,6 @@ class Photo(db.Model):
     user_id = db.Column(db.BigInteger, db.ForeignKey("CW2.users.user_id"), nullable=False)
     activity_id = db.Column(db.BigInteger, db.ForeignKey("CW2.activities.activity_id", ondelete="CASCADE"), nullable=True)
     trail_id = db.Column(db.BigInteger, db.ForeignKey("CW2.trails.trail_id", ondelete="CASCADE"), nullable=True)
-    
     photo_url = db.Column(db.String(255), nullable=False)
     caption = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))

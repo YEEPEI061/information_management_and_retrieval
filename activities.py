@@ -118,7 +118,6 @@ def read_one(activity_id):
     return jsonify(act_dict), 200
 
 
-
 def create(activity_data):
     try:
         user_name = activity_data.get("user_name")

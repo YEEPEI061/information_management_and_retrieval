@@ -94,13 +94,13 @@ def read_all():
             })
 
         # User lists for this trail
-        user_lists_objs = UserList.query.filter_by(trail_id=trail.trail_id).all()
-        user_lists = [
+        user_lists = UserList.query.filter_by(trail_id=trail.trail_id).all()
+        user_lists_list = [
             {
                 "user_name": User.query.get(ul.user_id).username if User.query.get(ul.user_id) else None,
                 "name": ul.name,
                 "visibility": ul.visibility
-            } for ul in user_lists_objs
+            } for ul in user_lists
         ]
 
         trail_dict = trail_full_schema.dump(trail)
@@ -111,7 +111,7 @@ def read_all():
 
         trail_dict["waypoints"] = waypoints_list
         trail_dict["activities"] = activities_list
-        trail_dict["user_lists"] = user_lists
+        trail_dict["user_lists"] = user_lists_list
 
         results.append(trail_dict)
 
@@ -125,6 +125,15 @@ def read_one(trail_id):
         abort(404, f"Trail {trail_id} not found")
 
     waypoints = Waypoint.query.filter_by(trail_id=trail.trail_id).order_by(Waypoint.sequence_no).all()
+    waypoints_list = [
+         {
+            "waypoint_name": wp.waypoint_name,
+            "description": wp.description,
+            "latitude": float(wp.latitude),
+            "longitude": float(wp.longitude),
+            "sequence_no": wp.sequence_no,
+        } for wp in waypoints
+    ]
 
     activities = Activity.query.filter_by(trail_id=trail.trail_id, visibility="public").all()
     activities_list = []
@@ -162,20 +171,15 @@ def read_one(trail_id):
 
     trail_dict = trail_full_schema.dump(trail)
     trail_dict.pop("total_waypoints", None)
-    trail_dict["waypoints"] = [
-        {
-            "waypoint_name": wp.waypoint_name,
-            "description": wp.description,
-            "latitude": float(wp.latitude),
-            "longitude": float(wp.longitude),
-            "sequence_no": wp.sequence_no,
-        } for wp in waypoints
-    ]
+    trail_dict.pop("total_activities", None)
+    trail_dict.pop("total_photos", None)
+    trail_dict.pop("trail_id", None)
+
+    trail_dict["waypoints"] = waypoints_list
     trail_dict["activities"] = activities_list
     trail_dict["user_lists"] = user_lists_list
 
     return jsonify(trail_dict), 200
-
 
 
 # CREATE TRAIL

@@ -89,7 +89,7 @@ components:
         tags:
           - trail_tag_name: "Forest"
           - trail_tag_name: "Scenic"
-        trail_name: "Forest Adventure"
+        trail_name: "Sunset Peak"
         waypoints:
           - description: "Trail start point"
             latitude: 3.1408
@@ -137,7 +137,7 @@ components:
             $ref: "#/components/schemas/Photo"
 
       example:
-        trail_name: "Forest Adventure Updated"
+        trail_name: "Sunset Peak Updated"
         description: "An updated scenic forest trail"
         length: 5.5
         elevation_gain: 130
@@ -344,6 +344,8 @@ paths:
       responses:
         "200":
           description: "List of all trails"
+        "500":
+          description: "Unexpected server error"
 
     post:
       operationId: "trails.create"
@@ -359,6 +361,12 @@ paths:
       responses:
         "201":
           description: "Trail created"
+        "400":
+          description: "Invalid input or duplicate trail name"
+        "404":
+          description: "Related resource (user, route type, difficulty) not found"
+        "500":
+          description: "Unexpected server error"
 
   /trails/{trail_id}:
     get:
@@ -370,6 +378,10 @@ paths:
       responses:
         "200":
           description: "Trail data"
+        "404":
+          description: "Trail not found"
+        "500":
+          description: "Unexpected server error"
 
     put:
       operationId: "trails.update"
@@ -387,6 +399,12 @@ paths:
       responses:
         "200":
           description: "Trail updated"
+        "400":
+          description: "Invalid input or duplicate trail name"
+        "404":
+          description: "Trail or related resource not found"
+        "500":
+          description: "Unexpected server error"
 
     delete:
       operationId: "trails.delete"
@@ -397,6 +415,10 @@ paths:
       responses:
         "200":
           description: "Trail deleted"
+        "404":
+          description: "Trail not found"
+        "500":
+          description: "Unexpected server error"
 
   # ---------- ACTIVITIES ----------
   /activities:
@@ -407,6 +429,8 @@ paths:
       responses:
         "200":
           description: "List of all activities"
+        "500":
+          description: "Unexpected server error"
 
     post:
       operationId: "activities.create"
@@ -422,6 +446,12 @@ paths:
       responses:
         "201":
           description: "Activity created"
+        "400":
+          description: "Invalid input or validation error"
+        "404":
+          description: "Trail not found"
+        "500":
+          description: "Unexpected server error"
 
   /activities/{activity_id}:
     get:
@@ -433,6 +463,10 @@ paths:
       responses:
         "200":
           description: "Activity data"
+        "404":
+          description: "Activity not found"
+        "500":
+          description: "Unexpected server error"
 
     put:
       operationId: "activities.update"
@@ -450,6 +484,12 @@ paths:
       responses:
         "200":
           description: "Activity updated"
+        "400":
+          description: "Invalid input or validation error"
+        "404":
+          description: "Activity not found"
+        "500":
+          description: "Unexpected server error"
 
     delete:
       operationId: "activities.delete"
@@ -460,6 +500,10 @@ paths:
       responses:
         "200":
           description: "Activity deleted"
+        "404":
+          description: "Activity not found"
+        "500":
+          description: "Unexpected server error"
 
   # USER LISTS
   /userlists:
@@ -470,6 +514,8 @@ paths:
       responses:
         "200":
           description: "List of all user lists"
+        "500":
+          description: "Unexpected server error"
 
     post:
       operationId: "userlists.create"
@@ -485,6 +531,12 @@ paths:
       responses:
         "201":
           description: "User list created"
+        "400":
+          description: "Invalid input or duplicate user list name"
+        "404":
+          description: "User or Trail not found"
+        "500":
+          description: "Internal server error"
 
   /userlists/{user_list_id}:
     get:
@@ -500,6 +552,10 @@ paths:
       responses:
         "200":
           description: "User list data"
+        "404":
+          description: "User list not found"
+        "500":
+          description: "Unexpected server error"
 
     put:
       operationId: "userlists.update"
@@ -521,6 +577,12 @@ paths:
       responses:
         "200":
           description: "User list updated"
+        "400":
+          description: "Invalid input data or validation error"
+        "404":
+          description: "User list not found"
+        "500":
+          description: "Unexpected server error"
 
     delete:
       operationId: "userlists.delete"
@@ -535,6 +597,10 @@ paths:
       responses:
         "200":
           description: "User list deleted"
+        "404":
+          description: "User list not found"
+        "500":
+          description: "Unexpected server error"
 
   /login:
     post:
