@@ -77,7 +77,7 @@ components:
       example:
         created_by: "Ada Lovelace"
         description: "A scenic forest trail"
-        difficulty_name: "Easy (choose one of: Easy, Moderate, Hard)"
+        difficulty_name: "Easy"
         elevation_gain: 120
         estimated_time: 1.5
         length: 5.2
@@ -85,7 +85,7 @@ components:
         photos:
           - caption: "Beautiful forest view"
             photo_url: "https://example.com/forest_view.jpg"
-        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
+        route_type_name: "Loop"
         tags:
           - trail_tag_name: "Forest"
           - trail_tag_name: "Scenic"
@@ -142,8 +142,8 @@ components:
         length: 5.5
         elevation_gain: 130
         estimated_time: 1.6
-        route_type_name: "Loop (choose one of: Loop, Out & Back, Point to Point)"
-        difficulty_name: "Moderate (choose one of: Easy, Moderate, Hard)"
+        route_type_name: "Loop"
+        difficulty_name: "Moderate"
         location_name: "Forest Park"
         updated_by: "Ada Lovelace"
         waypoints:
