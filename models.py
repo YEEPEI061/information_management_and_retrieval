@@ -71,21 +71,27 @@ class TrailTag(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
 
-
 class TrailTagSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = TrailTag
         load_instance = True
 
 
-trail_trailtags = db.Table(
-    "trail_trailtags",
-    db.Model.metadata,
-    db.Column("trail_trailtag_id", db.BigInteger, primary_key=True, autoincrement=True),
-    db.Column("trail_id", db.BigInteger, db.ForeignKey("CW2.trails.trail_id", ondelete="CASCADE")),
-    db.Column("trail_tag_id", db.BigInteger, db.ForeignKey("CW2.trail_tags.trail_tag_id", ondelete="CASCADE")),
-    schema="CW2"
-)
+class TrailTrailTag(db.Model):
+    __tablename__ = "trail_trailtags"
+    __table_args__ = {"schema": "CW2"}
+
+    trail_trailtag_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    trail_id = db.Column(db.BigInteger, db.ForeignKey("CW2.trails.trail_id", ondelete="CASCADE"), nullable=False)
+    trail_tag_id = db.Column(db.BigInteger, db.ForeignKey("CW2.trail_tags.trail_tag_id", ondelete="CASCADE"), nullable=False)
+    created_at = db.Column( db.DateTime, default=lambda: datetime.now(pytz.timezone("Asia/Kuala_Lumpur")))
+    updated_at = db.Column( db.DateTime, onupdate=lambda: datetime.now(pytz.timezone("Asia/Kuala_Lumpur")))
+
+class TrailTrailTagSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = TrailTrailTag
+        load_instance = True
+        include_fk = True 
 
 
 class Waypoint(db.Model):
@@ -217,7 +223,7 @@ class Trail(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(pytz.timezone('Asia/Kuala_Lumpur')))
 
     waypoints = db.relationship("Waypoint", backref="trail", cascade="all, delete, delete-orphan", order_by="Waypoint.sequence_no")
-    tags = db.relationship("TrailTag", secondary=trail_trailtags, backref="trails")
+    tags = db.relationship("TrailTag", secondary="CW2.trail_trailtags", backref="trails")
     location = db.relationship("Location", backref="trails")
     creator = db.relationship("User", backref="created_trails")
     route_type = db.relationship("RouteType", backref="trails")

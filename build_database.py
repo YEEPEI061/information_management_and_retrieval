@@ -17,7 +17,7 @@ with app.app_context():
     db.session.execute(text(create_schema_sql))
     db.session.commit()
 
-    # Drop view if exists
+
     db.session.execute(
         text("DROP VIEW IF EXISTS CW2.v_trail_full_details")
         .execution_options(autocommit=True)
@@ -295,7 +295,6 @@ with app.app_context():
     print("Database fully built with sample data")
 
 
-    # Create view (first statement in its batch)
     create_view_sql = """
     CREATE VIEW CW2.v_trail_full_details AS
     SELECT
