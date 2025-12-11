@@ -8,6 +8,21 @@ from models import (
 
 with app.app_context():
 
+    create_schema_sql = """
+    IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'CW2')
+    BEGIN
+        EXEC('CREATE SCHEMA CW2');
+    END
+    """
+    db.session.execute(text(create_schema_sql))
+    db.session.commit()
+
+    # Drop view if exists
+    db.session.execute(
+        text("DROP VIEW IF EXISTS CW2.v_trail_full_details")
+        .execution_options(autocommit=True)
+    )
+
     drop_fks_sql = """
     DECLARE @sql NVARCHAR(MAX) = '';
 
@@ -42,7 +57,14 @@ with app.app_context():
 
     db.session.commit()
 
-    db.create_all()
+    tables_to_create = [
+        table 
+        for table in db.metadata.sorted_tables
+        if not table.info.get("is_view")
+    ]
+
+    db.metadata.create_all(db.engine, tables=tables_to_create)
+
     db.session.commit()
 
     print("Tables dropped and recreated successfully.")
@@ -271,3 +293,56 @@ with app.app_context():
     db.session.commit()
 
     print("Database fully built with sample data")
+
+
+    # Create view (first statement in its batch)
+    create_view_sql = """
+    CREATE VIEW CW2.v_trail_full_details AS
+    SELECT
+        t.trail_id,
+        t.trail_name,
+        t.description,
+        t.length,
+        rt.route_type_name AS route_type,
+        d.difficulty_name AS difficulty,
+        l.location_name AS location,
+        u.username AS created_by,
+        (
+            SELECT STRING_AGG(ul.name, ', ')
+            FROM CW2.user_lists ul
+            WHERE ul.trail_id = t.trail_id
+        ) AS user_lists,
+        (
+            SELECT STRING_AGG(ttg.trail_tag_name, ', ')
+            FROM CW2.trail_trailtags ttt
+            JOIN CW2.trail_tags ttg ON ttt.trail_tag_id = ttg.trail_tag_id
+            WHERE ttt.trail_id = t.trail_id
+        ) AS tags,
+        COUNT(DISTINCT a.activity_id) AS total_activities,
+        AVG(CAST(a.rating AS FLOAT)) AS avg_rating,
+        COUNT(DISTINCT p.photo_id) AS total_photos,
+        COUNT(DISTINCT w.waypoint_id) AS total_waypoints
+    FROM CW2.trails t
+    JOIN CW2.route_types rt ON t.route_type_id = rt.route_type_id
+    JOIN CW2.difficulties d ON t.difficulty_id = d.difficulty_id
+    JOIN CW2.locations l ON t.location_id = l.location_id
+    JOIN CW2.users u ON t.created_by = u.user_id
+    LEFT JOIN CW2.activities a ON t.trail_id = a.trail_id
+    LEFT JOIN CW2.photos p ON t.trail_id = p.trail_id
+    LEFT JOIN CW2.waypoints w ON t.trail_id = w.trail_id
+    GROUP BY
+        t.trail_id,
+        t.trail_name,
+        t.description,
+        t.length,
+        rt.route_type_name,
+        d.difficulty_name,
+        l.location_name,
+        u.username;
+    """
+    escaped_sql = create_view_sql.replace("'", "''")
+
+    db.session.execute(
+        text(f"EXEC('{escaped_sql}')")
+    )
+    db.session.commit()

@@ -255,7 +255,10 @@ trails_schema = TrailSchema(many=True)
 
 class TrailFullDetails(db.Model):
     __tablename__ = "v_trail_full_details"
-    __table_args__ = {"schema": "CW2"}
+    __table_args__ = {
+        "schema": "CW2",
+        "info": {"is_view": True}
+    }
     __mapper_args__ = {"primary_key": ["trail_id"]} 
 
     trail_id = db.Column(db.BigInteger, primary_key=True)
@@ -273,7 +276,6 @@ class TrailFullDetails(db.Model):
     total_photos = db.Column(db.Integer)
     total_waypoints = db.Column(db.Integer)
 
-
 class TrailFullDetailsSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = TrailFullDetails
@@ -281,3 +283,4 @@ class TrailFullDetailsSchema(ma.SQLAlchemyAutoSchema):
 
 trail_full_schema = TrailFullDetailsSchema()
 trails_full_schema = TrailFullDetailsSchema(many=True)
+
