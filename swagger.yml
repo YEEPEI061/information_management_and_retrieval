@@ -165,14 +165,6 @@ components:
             caption: "Updated forest view"
 
     # ACTIVITIES
-    ActivityPhoto:
-      type: object
-      properties:
-        photo_url:
-          type: string
-        caption:
-          type: string
-
     ActivityCreate:
       type: object
       required:
@@ -204,7 +196,7 @@ components:
         photos:
           type: array
           items:
-            $ref: "#/components/schemas/ActivityPhoto"
+            $ref: "#/components/schemas/Photo"
       example:
         user_name: "Ada Lovelace"
         trail_name: "Forest Adventure"
@@ -251,7 +243,7 @@ components:
         photos:
           type: array
           items:
-            $ref: "#/components/schemas/ActivityPhoto"
+            $ref: "#/components/schemas/Photo"
       example:
         user_name: "Ada Lovelace"
         trail_name: "Forest Adventure"
@@ -350,7 +342,7 @@ paths:
     post:
       operationId: "trails.create"
       tags: ["Trails"]
-      summary: "Create a new trail with waypoints, tags, and photos"
+      summary: "Create a new trail with locations, waypoints, tags, and photos"
       requestBody:
         required: true
         content:

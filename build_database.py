@@ -37,7 +37,6 @@ with app.app_context():
     db.session.execute(text(drop_fks_sql))
     db.session.commit()
 
-    # DROP TABLES (ORDERED)
     tables = [
         "photos",
         "activities",
