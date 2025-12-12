@@ -333,6 +333,7 @@ paths:
       operationId: "trails.read_all"
       tags: ["Trails"]
       summary: "Get all trails"
+      description: "Retrieve all trails available in the system."
       responses:
         "200":
           description: "List of all trails"
@@ -343,6 +344,7 @@ paths:
       operationId: "trails.create"
       tags: ["Trails"]
       summary: "Create a new trail with locations, waypoints, tags, and photos"
+      description: "Create a new trail. Requires the trail name, creator, length, route type, difficulty, and location."
       requestBody:
         required: true
         content:
@@ -365,6 +367,7 @@ paths:
       operationId: "trails.read_one"
       tags: ["Trails"]
       summary: "Get a trail by ID"
+      description: "Retrieve a specific trail using its ID."
       parameters:
         - $ref: "#/components/parameters/trail_id"
       responses:
@@ -379,6 +382,7 @@ paths:
       operationId: "trails.update"
       tags: ["Trails"]
       summary: "Update a trail (fields, waypoints, tags, photos)"
+      description: "Update an existing trail by ID."
       parameters:
         - $ref: "#/components/parameters/trail_id"
       requestBody:
@@ -402,6 +406,7 @@ paths:
       operationId: "trails.delete"
       tags: ["Trails"]
       summary: "Delete a trail"
+      description: "Delete an existing trail by ID. It will be removed permanently from the database."
       parameters:
         - $ref: "#/components/parameters/trail_id"
       responses:
@@ -418,6 +423,7 @@ paths:
       operationId: "activities.read_all"
       tags: ["Activities"]
       summary: "Get all activities"
+      description: "Retrieve all activities available in the system."
       responses:
         "200":
           description: "List of all activities"
@@ -428,6 +434,7 @@ paths:
       operationId: "activities.create"
       tags: ["Activities"]
       summary: "Create a new activity with photos"
+      description: "Create a new activity for a user on a specific trail. Requires the creator, trail, length, moving time, and total time."
       requestBody:
         required: true
         content:
@@ -450,6 +457,7 @@ paths:
       operationId: "activities.read_one"
       tags: ["Activities"]
       summary: "Get an activity by ID"
+      description: "Retrieve a specific user list using its ID."
       parameters:
         - $ref: "#/components/parameters/activity_id"
       responses:
@@ -464,6 +472,7 @@ paths:
       operationId: "activities.update"
       tags: ["Activities"]
       summary: "Update an activity (fields and photos)"
+      description: "Update an existing activity by ID."
       parameters:
         - $ref: "#/components/parameters/activity_id"
       requestBody:
@@ -487,6 +496,7 @@ paths:
       operationId: "activities.delete"
       tags: ["Activities"]
       summary: "Delete an activity"
+      description: "Delete an existing activity by ID. It will be removed permanently from the database."
       parameters:
         - $ref: "#/components/parameters/activity_id"
       responses:
@@ -503,6 +513,7 @@ paths:
       operationId: "userlists.read_all"
       tags: ["User Lists"]
       summary: "Get all user lists"
+      description: "Retrieve all user lists available in the system."
       responses:
         "200":
           description: "List of all user lists"
@@ -512,7 +523,8 @@ paths:
     post:
       operationId: "userlists.create"
       tags: ["User Lists"]
-      summary: "Create a new user list"
+      summary: "Create a new user list. Requires the name and creator."
+      description: "Create a new user list for a user, optionally associating it with a trail."
       requestBody:
         required: true
         content:
@@ -535,6 +547,7 @@ paths:
       operationId: "userlists.read_one"
       tags: ["User Lists"]
       summary: "Get a user list by ID"
+      description: "Retrieve a specific user list using its ID."
       parameters:
         - name: user_list_id
           in: path
@@ -553,6 +566,7 @@ paths:
       operationId: "userlists.update"
       tags: ["User Lists"]
       summary: "Update a user list"
+      description: "Update an existing user list by ID."
       parameters:
         - name: user_list_id
           in: path
@@ -580,6 +594,7 @@ paths:
       operationId: "userlists.delete"
       tags: ["User Lists"]
       summary: "Delete a user list"
+      description: "Delete an existing user list by ID. It will be removed permanently from the database."
       parameters:
         - name: user_list_id
           in: path
