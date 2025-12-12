@@ -8,6 +8,7 @@ from models import (
 )
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
+from marshmallow import ValidationError
 
 app = Flask(__name__)
 
@@ -22,6 +23,7 @@ def handle_http_exception(e):
     }).data
     response.content_type = "application/json"
     return response
+
 
 # VALIDATION HELPERS
 def validate_user(user_id):
@@ -187,9 +189,9 @@ def create(trail_data):
     try:
         # Extract name-based fields
         created_by_name = trail_data.pop("created_by")
-        route_type_name = trail_data.pop("route_type_name", None)
-        difficulty_name = trail_data.pop("difficulty_name", None)
-        location_name = trail_data.pop("location_name", None)
+        route_type_name = trail_data.pop("route_type", None)
+        difficulty_name = trail_data.pop("difficulty", None)
+        location_name = trail_data.pop("location", None)
 
         # Convert user name → user_id (case-insensitive)
         user = User.query.filter(User.username.ilike(created_by_name)).first()
@@ -242,7 +244,7 @@ def create(trail_data):
 
         # Tags (create if missing)
         for t in tags_data:
-            tag_name = t.get("trail_tag_name")
+            tag_name = t.get("trail_tag")
             if not tag_name:
                 continue
             tag = TrailTag.query.filter(TrailTag.trail_tag_name.ilike(tag_name)).first()
@@ -301,6 +303,9 @@ def create(trail_data):
     except HTTPException:
         raise   
 
+    except ValidationError as err:
+        abort(400, description=err.messages) 
+
     except Exception as e:
         db.session.rollback()
         abort(500, description=str(e))
@@ -314,9 +319,9 @@ def update(trail_id, trail_data):
             abort(404, description=f"Trail with id {trail_id} not found")
 
         updated_by_name = trail_data.pop("updated_by", None)
-        route_type_name = trail_data.pop("route_type_name", None)
-        difficulty_name = trail_data.pop("difficulty_name", None)
-        location_name = trail_data.pop("location_name", None)
+        route_type_name = trail_data.pop("route_type", None)
+        difficulty_name = trail_data.pop("difficulty", None)
+        location_name = trail_data.pop("location", None)
 
         if updated_by_name:
             user = User.query.filter(User.username.ilike(updated_by_name)).first()
@@ -369,7 +374,7 @@ def update(trail_id, trail_data):
         if tags_data is not None:
             trail.tags.clear()
             for t in tags_data:
-                tag_name = t.get("trail_tag_name")
+                tag_name = t.get("trail_tag")
                 if not tag_name:
                     continue
                 tag = TrailTag.query.filter(TrailTag.trail_tag_name.ilike(tag_name)).first()
@@ -429,6 +434,9 @@ def update(trail_id, trail_data):
 
     except HTTPException:
         raise
+
+    except ValidationError as err:
+        abort(400, description=err.messages) 
 
     except Exception as e:
         db.session.rollback()

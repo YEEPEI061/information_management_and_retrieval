@@ -3,10 +3,10 @@ from config import db
 from models import UserList, UserListSchema, User, Trail
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
+from marshmallow import ValidationError
 
 userlist_schema = UserListSchema()
 userlists_schema = UserListSchema(many=True)
-
 
 app = Flask(__name__)
 
@@ -164,6 +164,9 @@ def create(user_list_data):
     except HTTPException:
         raise 
 
+    except ValidationError as err:
+        abort(400, description=err.messages) 
+
     except Exception as e:
         db.session.rollback()
         abort(500, description=str(e))
@@ -226,6 +229,9 @@ def update(user_list_id, user_list_data):
 
     except HTTPException:
         raise 
+
+    except ValidationError as err:
+        abort(400, description=err.messages) 
 
     except Exception as e:
         db.session.rollback()

@@ -27,7 +27,7 @@ components:
     TrailTag:
       type: object
       properties:
-        trail_tag_name:
+        trail_tag:
           type: string
 
     Photo:
@@ -54,11 +54,11 @@ components:
           type: number
         estimated_time:
           type: number
-        route_type_name:
+        route_type:
           type: string
-        difficulty_name:
+        difficulty:
           type: string
-        location_name:
+        location:
           type: string
         created_by:
           type: string
@@ -77,18 +77,18 @@ components:
       example:
         created_by: "Ada Lovelace"
         description: "A scenic forest trail"
-        difficulty_name: "Easy"
+        difficulty: "Easy"
         elevation_gain: 120
         estimated_time: 1.5
         length: 5.2
-        location_name: "Forest Park"
+        location: "Forest Park"
         photos:
           - caption: "Beautiful forest view"
             photo_url: "https://example.com/forest_view.jpg"
-        route_type_name: "Loop"
+        route_type: "Loop"
         tags:
-          - trail_tag_name: "Forest"
-          - trail_tag_name: "Scenic"
+          - trail_tag: "Forest"
+          - trail_tag: "Scenic"
         trail_name: "Sunset Peak"
         waypoints:
           - description: "Trail start point"
@@ -115,11 +115,11 @@ components:
           type: number
         estimated_time:
           type: number
-        route_type_name:
+        route_type:
           type: string
-        difficulty_name:
+        difficulty:
           type: string
-        location_name:
+        location:
           type: string
         updated_by:
           type: string
@@ -142,9 +142,9 @@ components:
         length: 5.5
         elevation_gain: 130
         estimated_time: 1.6
-        route_type_name: "Loop"
-        difficulty_name: "Moderate"
-        location_name: "Forest Park"
+        route_type: "Loop"
+        difficulty: "Moderate"
+        location: "Forest Park"
         updated_by: "Ada Lovelace"
         waypoints:
           - waypoint_name: "Start"
@@ -158,8 +158,8 @@ components:
             longitude: 101.6871
             sequence_no: 2
         tags:
-          - trail_tag_name: "Forest"
-          - trail_tag_name: "Scenic"
+          - trail_tag: "Forest"
+          - trail_tag: "Scenic"
         photos:
           - photo_url: "https://example.com/forest_view_updated.jpg"
             caption: "Updated forest view"

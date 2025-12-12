@@ -5,6 +5,7 @@ from models import (
     User, Trail
 )
 from werkzeug.exceptions import HTTPException
+from marshmallow import ValidationError
 
 activity_schema = ActivitySchema()
 activities_schema = ActivitySchema(many=True)
@@ -123,8 +124,13 @@ def create(activity_data):
         user_name = activity_data.get("user_name")
         trail_name = activity_data.get("trail_name")
 
-        if not user_name or not trail_name:
-            abort(400, "Missing required fields: user_name or trail_name.")
+        missing = []
+        for key in ["user_name", "trail_name"]:
+            if key not in activity_data or not activity_data[key]:
+                missing.append(key)
+
+        if missing:
+            abort(400, description=f"Missing required fields: {', '.join(missing)}")
 
         allowed_visibility = ["public", "private", "friends"]
         visibility = activity_data.get("visibility")
@@ -182,6 +188,9 @@ def create(activity_data):
     
     except HTTPException:
         raise 
+
+    except ValidationError as err:
+        abort(400, description=err.messages) 
 
     except Exception as e:
         db.session.rollback()
@@ -253,6 +262,9 @@ def update(activity_id, activity_data):
     
     except HTTPException:
         raise 
+
+    except ValidationError as err:
+        abort(400, description=err.messages) 
 
     except Exception as e:
         db.session.rollback()

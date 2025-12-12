@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from config import db, ma
-from marshmallow import fields, validate
+from marshmallow import ValidationError, fields, validate, validates
 
 class User(db.Model):
     __tablename__ = "users"
@@ -141,15 +141,15 @@ class ActivitySchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
-    user_id = fields.Int(required=True)
-    trail_id = fields.Int(required=True)
+    user_id = fields.Int(required=True, error_messages={"required": "User is required."})
+    trail_id = fields.Int(required=True, error_messages={"required": "Trail is required."})
     notes = fields.Str(validate=validate.Length(max=500))
     rating = fields.Int(validate=validate.Range(min=1, max=5))
     visibility = fields.Str(validate=validate.OneOf(["public", "private", "friends"]), missing="public")
-    length = fields.Float(validate=validate.Range(min=0), required=True)
+    length = fields.Float(validate=validate.Range(min=0), required=True, error_messages={"required": "Length is required."})
     elevation_gain = fields.Float(validate=validate.Range(min=0))
-    moving_time = fields.Int(validate=validate.Range(min=0), required=True)
-    total_time = fields.Int(validate=validate.Range(min=0), required=True)
+    moving_time = fields.Int(validate=validate.Range(min=0), required=True, error_messages={"required": "Moving time is required."})
+    total_time = fields.Int(validate=validate.Range(min=0), required=True, error_messages={"required": "Total time is required."})
     calories = fields.Int(validate=validate.Range(min=0))
     avg_pace = fields.Float(validate=validate.Range(min=0))
 
@@ -197,8 +197,15 @@ class UserListSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
-    name = fields.String(required=True, validate=validate.Length(max=100))
-    visibility = fields.String(required=True, validate=validate.OneOf(["public", "private", "friends"]))
+    user_id = fields.Int(required=True, error_messages={"required": "User is required."})
+    name = fields.String(required=True, error_messages={"required": "Name is required."})
+    @validates("name")
+    def validate_name(self, value):
+        if not value.strip():
+            raise ValidationError("Name cannot be empty or just whitespace.")
+        if len(value) > 100:
+            raise ValidationError("Name must be at most 100 characters.")
+    visibility = fields.String(validate=validate.OneOf(["public", "private", "friends"]))
     
     user_id = fields.Integer(required=True)
     trail_id = fields.Integer(allow_none=True)
@@ -239,15 +246,21 @@ class TrailSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         include_relationships = True
 
-    trail_name = fields.Str(required=True, validate=validate.Length(max=100))
+    trail_name = fields.Str(required=True, error_messages={"required": "Trail name is required."})
+    @validates("trail_name")
+    def validate_name(self, value):
+        if not value.strip():
+            raise ValidationError("Name cannot be empty or just whitespace.")
+        if len(value) > 100:
+            raise ValidationError("Name must be at most 100 characters.")
     description = fields.Str(validate=validate.Length(max=1000))
-    length = fields.Float(required=True, validate=validate.Range(min=0))
+    length = fields.Float(required=True, validate=validate.Range(min=0), error_messages={"required": "Length is required."})
     elevation_gain = fields.Float(validate=validate.Range(min=0))
     estimated_time = fields.Float(validate=validate.Range(min=0))
-    route_type_id = fields.Int(required=True)
-    difficulty_id = fields.Int(required=True)
-    location_id = fields.Int(required=True)
-    created_by = fields.Int(required=True)
+    route_type_id = fields.Int(required=True, error_messages={"required": "Route type is required."})
+    difficulty_id = fields.Int(required=True, error_messages={"required": "Difficulty is required."})
+    location_id = fields.Int(required=True, error_messages={"required": "Location is required."})
+    created_by = fields.Int(required=True, error_messages={"required": "Creator is required."})
     updated_by = fields.Int()
 
     waypoints = fields.Nested(WaypointSchema, many=True)
